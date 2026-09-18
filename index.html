@@ -1074,7 +1074,9 @@ function update(dt){perf+=dt;if(confetti>0)confetti-=dt;if(shake>0)shake-=dt;
    if(mx||my){const s=baseSpd()*dt,nx=P.x+mx*s,ny=P.y+my*s;
     if(walk(Math.round(nx),Math.round(P.y)))P.x=nx;
     if(walk(Math.round(P.x),Math.round(ny)))P.y=ny;
-    P.dir=Math.abs(mx)>Math.abs(my)?(mx>0?'right':'left'):(my>0?'down':'up');P.anim+=dt*9;P.pend=null;}}
+    P.dir=Math.abs(mx)>Math.abs(my)?(mx>0?'right':'left'):(my>0?'down':'up');P.anim+=dt*9;P.pend=null;}
+   const ug=T(Math.round(P.x),Math.round(P.y));
+   if(ug&&ug.o&&['exit','exitmine','ladder'].includes(ug.o.k))startAct({type:'enter',tx:Math.round(P.x),ty:Math.round(P.y)});}
   G.animals.forEach(a=>{if(a.loc!=='farm')return;a.t=(a.t||0)-dt;
    if(a.t<=0){a.t=rnd(2,5);const nx=cl(Math.round(a.x)+ri(-1,1),1,18),ny=cl(Math.round(a.y)+ri(-1,1),1,10);
     if(walk(nx,ny,'farm')){a.tx=nx;a.ty=ny;}}
