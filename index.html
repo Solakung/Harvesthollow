@@ -108,6 +108,10 @@ canvas{display:block;image-rendering:pixelated;background:#6cbf4b;width:960px;he
    Harvest Hollow 3.0 Deluxe — original single-file farming sim
    ================================================================== */
 const TS=48,GW=20,GH=12,W=960,H=576;
+const ZOOM=1.7;let camX=0,camY=0;
+function updateCamera(){const vw=W/ZOOM,vh=H/ZOOM;
+ camX=cl(P.x*TS+TS/2-vw/2,0,Math.max(0,GW*TS-vw));
+ camY=cl(P.y*TS+TS/2-vh/2,0,Math.max(0,GH*TS-vh));}
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1));
 const pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -1126,9 +1130,11 @@ function update(dt){perf+=dt;if(confetti>0)confetti-=dt;if(shake>0)shake-=dt;
 function sg(){return['#6cbf4b','#57b13f','#9aa83c','#d9e4ea'][G.season];}
 function sg2(){return['#63b344','#4fa438','#8d9b34','#cdd9e0'][G.season];}
 function render(){const L=G.loc,m=G.maps[L];if(!m)return;
+ updateCamera();
+ ctx.clearRect(0,0,W,H);
  ctx.save();
  if(shake>0)ctx.translate(rnd(-4,4)*shake*3,rnd(-4,4)*shake*3);
- ctx.clearRect(-20,-20,W+40,H+40);
+ ctx.scale(ZOOM,ZOOM);ctx.translate(-camX,-camY);
  for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){const t=m[y][x],h=hash(x,y);let c;
   switch(t.t){
   case 'grass':c=h>.5?sg():sg2();break;
@@ -1188,10 +1194,10 @@ function render(){const L=G.loc,m=G.maps[L];if(!m)return;
  floats.forEach(f=>{ctx.globalAlpha=cl(1-f.t/f.life,0,1);ctx.font='bold 15px Trebuchet MS';ctx.textAlign='center';
   ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.strokeText(f.txt,f.x,f.y);
   ctx.fillStyle=f.c;ctx.fillText(f.txt,f.x,f.y);ctx.globalAlpha=1;ctx.textAlign='left';});
+ ctx.restore();
  drawWeather();drawLight();
  if(confetti>0){ctx.font='26px serif';ctx.textAlign='center';ctx.fillStyle='#fff';
   ctx.fillText('🎉 ยินดีด้วย! 🎉',W/2,70+Math.sin(perf*4)*4);ctx.textAlign='left';}
- ctx.restore();
  if(fishing)drawFishing();}
 function drawObj(x,y,o,tile){const px=x*TS,py=y*TS;
  switch(o.k){
@@ -1851,7 +1857,7 @@ UI.sleepConfirm=function(){openPanel('<h2>🛏️ เข้านอน?</h2><di
 let hover=null,keys={},stick={active:false,dx:0,dy:0,id:null};
 function toTile(e){const r=cv.getBoundingClientRect();
  const x=(e.clientX-r.left)*(cv.width/r.width),y=(e.clientY-r.top)*(cv.height/r.height);
- return{x:Math.floor(x/TS),y:Math.floor(y/TS)};}
+ return{x:Math.floor((camX+x/ZOOM)/TS),y:Math.floor((camY+y/ZOOM)/TS)};}
 cv.addEventListener('pointermove',e=>{hover=toTile(e);});
 cv.addEventListener('pointerleave',()=>hover=null);
 cv.addEventListener('pointerdown',e=>{if(!running)return;ac();
