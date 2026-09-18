@@ -178,7 +178,7 @@ I('ironarmor','เกราะเหล็ก','🛡️',3000,{type:'armor',def:
 I('obsidianarmor','เกราะออบซิเดียน','🥋',12000,{type:'armor',def:12});
 I('leatherboots','รองเท้าหนัง','🥾',500,{type:'boots',spd:.35});
 I('speedboots','รองเท้าลมกรด','👟',3500,{type:'boots',spd:.9});
-for(const k in CROPS){const c=CROPS[k];I(k,c.n,c.e,c.sell,{type:'crop'});I(k+'_seed','เมล็ด'+c.n,'🌱',c.seed,{type:'seed',crop:k});}
+for(const k in CROPS){const c=CROPS[k];I(k,c.n,c.e,c.sell,{type:'crop'});I(k+'_seed','เมล็ด'+c.n,'🌱'+c.e,c.seed,{type:'seed',crop:k});}
 I('wood','ไม้','🪵',8);I('hardwood','ไม้เนื้อแข็ง','🟫',80);I('stone','หิน','🪨',5);
 I('fiber','ใยพืช','🍃',3);I('hay','หญ้าแห้ง','🌿',25);I('sap','ยางไม้','🧴',4);
 I('coal','ถ่านหิน','⚫',60);I('copper','แร่ทองแดง','🟠',75);I('iron','แร่เหล็ก','⚙️',150);
@@ -1018,13 +1018,14 @@ function startFishing(){if(G.energy<8){toast('⚡ พลังงานไม่
  let id=pick(tbl);
  if(chance(.03+G.skills.fishing.lv*.008+luck())&&(G.loc==='mountain'||G.loc==='forest'))id='legend';
  const f=FISH.find(x=>x.id===id);
- fishing={f,bar:.45,vel:0,fish:.5,fv:0,prog:.4,t:0,hold:false,
+ fishing={f,bar:.45,vel:0,fish:.5,fv:0,prog:.4,t:0,
   size:.19+G.skills.fishing.lv*.013+luck()*.1+(perkOf('fishing',5)==='trapper'?.05:0),
   treas:chance(.22+luck()+(perkOf('fishing',10)==='pirate'?.25:0)),tp:0,tgot:false};
  SFX.water();}
+function fishTap(){if(!fishing)return;fishing.vel=Math.max(fishing.vel-1.15,-3.2);}
 function updFishing(dt){const F=fishing;F.t+=dt;
  F.fv+=(Math.sin(F.t*(1.6+F.f.d*3))*.55+rnd(-.5,.5))*dt;F.fv*=.93;F.fish=cl(F.fish+F.fv*dt*1.6,0,1);
- F.vel+=(F.hold?-1.35:1.15)*dt;F.vel*=.92;F.bar=cl(F.bar+F.vel,0,1-F.size);
+ F.vel+=1.75*dt;F.vel*=.9;F.bar=cl(F.bar+F.vel*dt,0,1-F.size);
  const inb=F.fish>=F.bar&&F.fish<=F.bar+F.size;
  F.prog+=(inb?.38:-.26)*dt;
  if(F.treas&&!F.tgot){const near=Math.abs(F.tp-F.bar-F.size/2)<F.size;if(near)F.tprog=(F.tprog||0)+dt*.5;
@@ -1475,7 +1476,7 @@ function drawFishing(){const F=fishing,bx=700,by=110,bw=44,bh=300;
  if(F.treas&&!F.tgot){ctx.font='20px serif';ctx.fillText('🧰',bx+bw/2,by+F.tp*bh+8);}
  ctx.fillStyle='#4a3a2a';ctx.fillRect(bx+bw+14,by,18,bh);
  ctx.fillStyle='#7ed957';ctx.fillRect(bx+bw+14,by+bh*(1-F.prog),18,bh*F.prog);
- ctx.fillStyle='#fff';ctx.font='bold 16px Trebuchet MS';ctx.fillText('🎣 กดค้าง!',bx+bw/2,by-56);
+ ctx.fillStyle='#fff';ctx.font='bold 16px Trebuchet MS';ctx.fillText('🎣 แตะรัวๆ!',bx+bw/2,by-56);
  ctx.font='12px Trebuchet MS';ctx.fillText('ให้ปลาอยู่ในแถบเขียว',bx+bw/2,by+bh+30);ctx.textAlign='left';}
 /* ==================================================================
    HUD & UI
@@ -1852,12 +1853,8 @@ function toTile(e){const r=cv.getBoundingClientRect();
 cv.addEventListener('pointermove',e=>{hover=toTile(e);});
 cv.addEventListener('pointerleave',()=>hover=null);
 cv.addEventListener('pointerdown',e=>{if(!running)return;ac();
- if(fishing){e.preventDefault();fishing.hold=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}return;}
+ if(fishing){e.preventDefault();fishTap();return;}
  const t=toTile(e);clickTile(t.x,t.y);});
-['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(ev=>
- cv.addEventListener(ev,()=>{if(fishing)fishing.hold=false;}));
-window.addEventListener('pointerup',()=>{if(fishing)fishing.hold=false;});
-window.addEventListener('blur',()=>{if(fishing)fishing.hold=false;});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(!running)return;
  if(k>='1'&&k<='9'){G.sel=parseInt(k)-1;SFX.pop();updHUD();}
@@ -1880,9 +1877,8 @@ stEl.addEventListener('pointermove',e=>{if(stick.active&&e.pointerId===stick.id)
  stick.active=false;stick.dx=0;stick.dy=0;knob.style.transform='translate(0,0)';}));
 const bA=document.getElementById('bA');
 bA.addEventListener('pointerdown',e=>{e.preventDefault();ac();
- if(fishing){fishing.hold=true;try{bA.setPointerCapture(e.pointerId);}catch(_){}return;}
+ if(fishing){fishTap();return;}
  const f=facingTile();clickTile(f.x,f.y);});
-['pointerup','pointercancel','lostpointercapture'].forEach(ev=>bA.addEventListener(ev,()=>{if(fishing)fishing.hold=false;}));
 document.getElementById('bB').addEventListener('pointerdown',e=>{e.preventDefault();UI.inventory();});
 document.getElementById('bPrev').addEventListener('pointerdown',e=>{e.preventDefault();G.sel=(G.sel+11)%12;SFX.pop();updHUD();});
 document.getElementById('bNext').addEventListener('pointerdown',e=>{e.preventDefault();G.sel=(G.sel+1)%12;SFX.pop();updHUD();});
