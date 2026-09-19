@@ -108,7 +108,7 @@ canvas{display:block;image-rendering:pixelated;background:#6cbf4b;width:960px;he
    Harvest Hollow 3.0 Deluxe — original single-file farming sim
    ================================================================== */
 const TS=48,GW=20,GH=12,W=960,H=576;
-const ZOOM=1.7;let camX=0,camY=0;
+const ZOOM=1.7;let camX=0,camY=0,warpLock=0;
 function updateCamera(){const vw=W/ZOOM,vh=H/ZOOM;
  camX=cl(P.x*TS+TS/2-vw/2,0,Math.max(0,GW*TS-vw));
  camY=cl(P.y*TS+TS/2-vh/2,0,Math.max(0,GH*TS-vh));}
@@ -293,41 +293,115 @@ for(const k in MACHINES)CRAFT[k]={rec:MACHINES[k].rec,lv:MACHINES[k].lv,machine:
 const NPCDEF=[
 {id:'mira',n:'มิร่า',c:'#e0679a',job:'ร้านดอกไม้',mar:1,bd:{s:0,d:12},
  like:['flower','crocus','pie','cookie','strawberry_wine','honey','heartycake'],
- say:['สวนของเธอสวยมากเลยนะ!','ฉันชอบเดินเล่นที่ชายหาดตอนเย็น','ดอกไม้ป่าในฤดูใบไม้ผลิสวยที่สุดเลย'],
+ say:['สวนของเธอสวยมากเลยนะ!','ฉันชอบเดินเล่นที่ชายหาดตอนเย็น','ดอกไม้ป่าในฤดูใบไม้ผลิสวยที่สุดเลย',
+  'ฤดูนี้มีดอกไม้ใหม่เข้าร้านเยอะเลยนะ','บางทีฉันก็แอบส่งดอกไม้ไปให้เพื่อนโดยไม่บอกชื่อ'],
  mr:['อรุณสวัสดิ์ที่รักของฉัน 💕','ฉันรดน้ำต้นไม้ให้แล้วนะ','วันนี้เหนื่อยไหม? พักบ้างนะ'],
+ dt:['มีเธอเป็นแฟน ทำให้ทุกวันสดใสขึ้นเยอะเลยนะ 🌷','เธอมาเยี่ยมร้านทีไร ฉันยิ้มทั้งวันเลย','อยากรู้จักเธอให้มากขึ้นอีกเรื่อยๆ เลยนะ'],
  sc:[[6,'town',6,6],[10,'town',5,7],[13,'beach',6,4],[18,'saloon',4,5],[22,'town',6,6]]},
 {id:'nin',n:'นิล',c:'#6a5acd',job:'นักธรณีวิทยา',mar:1,bd:{s:2,d:4},
  like:['quartz','amethyst','diamond','geode','prismatic','minerscoffee','iron'],
- say:['ในเหมืองชั้นลึกมีแร่หายากนะ','เธอเคยเจอผลึกปริซึมไหม? ฉันตามหามานาน','ระเบิดช่วยขุดหินได้เร็วมาก'],
+ say:['ในเหมืองชั้นลึกมีแร่หายากนะ','เธอเคยเจอผลึกปริซึมไหม? ฉันตามหามานาน','ระเบิดช่วยขุดหินได้เร็วมาก',
+  'แผนที่เหมืองที่ฉันวาดไว้ยังไม่สมบูรณ์เลย','เสียงสะท้อนในถ้ำลึกมันน่าขนลุกดีนะ'],
  mr:['เจอแร่อะไรใหม่ๆ บ้างไหม?','ฉันเก็บหินสวยๆ มาให้เธอด้วยนะ','ระวังตัวในเหมืองด้วยนะที่รัก'],
+ dt:['มีเธอเป็นแฟน ฉันกล้าเล่าเรื่องที่ไม่เคยเล่าให้ใครฟังเลยนะ','เธอทำให้เหมืองที่เคยเงียบเหงาดูมีสีสันขึ้นเยอะ','อยากพาเธอไปดูจุดลับๆ ในเหมืองที่ฉันชอบจัง'],
  sc:[[6,'mountain',5,7],[11,'mountain',6,4],[16,'town',12,6],[19,'saloon',8,5],[23,'mountain',5,7]]},
 {id:'tin',n:'ติน',c:'#d4783a',job:'นักผจญภัย',mar:1,bd:{s:1,d:20},
  like:['essence','bone','goldslime','beer','fishdish','steelsword','largepotion'],
- say:['ชั้น 20 ของเหมืองมีบอสอยู่นะ ระวังด้วย!','อาวุธดีๆ ช่วยชีวิตได้จริง','ฉันฝึกดาบทุกเช้าเลย'],
+ say:['ชั้น 20 ของเหมืองมีบอสอยู่นะ ระวังด้วย!','อาวุธดีๆ ช่วยชีวิตได้จริง','ฉันฝึกดาบทุกเช้าเลย',
+  'ฉันเคยหลงป่ามาสามวันเต็มๆ นะ ไม่เข็ดเลย','สะสมไอเทมหายากคือความสุขเล็กๆ ของฉัน'],
  mr:['ไปลุยเหมืองด้วยกันไหม?','ฉันลับดาบให้เธอแล้วนะ','บ้านอบอุ่นกว่าถ้ำเยอะเลย'],
+ dt:['มีเธอเป็นแฟน ทำให้ฉันอยากกลับบ้านไวขึ้นทุกครั้งเลยนะ','เธอคือเหตุผลที่ฉันเริ่มระวังตัวมากขึ้นในเหมือง','อยากพาเธอไปผจญภัยด้วยกันบ่อยๆ เลย'],
  sc:[[6,'town',15,6],[10,'mountain',16,9],[15,'town',13,7],[18,'saloon',10,6],[23,'town',15,6]]},
 {id:'kan',n:'กันต์',c:'#3aa38a',job:'เชฟร้านเหล้า',mar:1,bd:{s:3,d:6},
  like:['truffle','luckystew','seafoodsoup','cheese','tuna','melon','sashimi'],
- say:['วัตถุดิบสดใหม่คือหัวใจของอาหาร','ลองเอาทรัฟเฟิลมาให้ฉันสิ','ฉันคิดสูตรใหม่ได้แล้วล่ะ'],
+ say:['วัตถุดิบสดใหม่คือหัวใจของอาหาร','ลองเอาทรัฟเฟิลมาให้ฉันสิ','ฉันคิดสูตรใหม่ได้แล้วล่ะ',
+  'เบียร์แก้วเย็นๆ คู่กับปลาย่างมันดีต่อใจสุดๆ','ฉันเรียนทำอาหารจากคุณยายตั้งแต่เด็ก'],
  mr:['ทำอาหารเช้าไว้ให้แล้วนะ','วันนี้อยากกินอะไรเป็นพิเศษไหม?','เธอคือวัตถุดิบที่ดีที่สุดในชีวิตฉัน'],
+ dt:['มีเธอเป็นแฟน ทำให้ทำอาหารทุกจานสนุกขึ้นเยอะเลย','เธอมากินข้าวที่ร้านทีไร ฉันตั้งใจทำเป็นพิเศษเสมอนะ','อยากทำเมนูใหม่ให้เธอชิมก่อนใครเลยจัง'],
  sc:[[6,'saloon',6,6],[12,'town',9,7],[16,'saloon',5,6],[22,'saloon',6,6]]},
 {id:'boon',n:'ลุงบุญ',c:'#5b8ad6',job:'ชาวประมง',bd:{s:1,d:2},
  like:['carp','trout','eel','sturgeon','farmstew','beer','crab'],
- say:['ตกปลาที่ทะเลสาบภูเขาได้ปลาตัวใหญ่นะ','ฝนตกพรุ่งนี้ไม่ต้องรดน้ำหรอก','ชายหาดตอนน้ำลงมีของดีเยอะ'],
+ say:['ตกปลาที่ทะเลสาบภูเขาได้ปลาตัวใหญ่นะ','ฝนตกพรุ่งนี้ไม่ต้องรดน้ำหรอก','ชายหาดตอนน้ำลงมีของดีเยอะ',
+  'ลุงตกปลามาสี่สิบกว่าปีแล้วนะ','บางวันก็ได้แค่รองเท้าเก่ากับกระป๋องนี่แหละ 555'],
  sc:[[6,'beach',12,4],[13,'beach',9,3],[18,'saloon',9,5],[22,'beach',12,4]]},
 {id:'kaew',n:'ป้าแก้ว',c:'#8ac46a',job:'เกษตรกรอาวุโส',bd:{s:0,d:24},
  like:['milk','egg','mushroom','salad','cheese','cloth','honey'],
- say:['ลูบหัวสัตว์ทุกวันแล้วมันจะรักเรา','เรือนกระจกปลูกได้ทั้งปีเลยนะ','สปริงเกลอร์ช่วยประหยัดแรงมาก'],
+ say:['ลูบหัวสัตว์ทุกวันแล้วมันจะรักเรา','เรือนกระจกปลูกได้ทั้งปีเลยนะ','สปริงเกลอร์ช่วยประหยัดแรงมาก',
+  'ป้าปลูกผักมาตั้งแต่ก่อนเธอเกิดอีกนะ','อากาศเปลี่ยนบ่อยแบบนี้ต้องดูแลพืชผลดีๆ'],
  sc:[[6,'town',9,8],[12,'town',7,6],[17,'town',9,8]]},
 {id:'som',n:'ช่างสม',c:'#a06a3a',job:'ช่างตีเหล็ก',bd:{s:2,d:18},
  like:['copper','iron','gold','coal','iridium','geode','ironbar'],
- say:['เอาแร่มาให้ฉันอัปเกรดเครื่องมือได้เลย','ก้อนหินลึกลับต้องทุบถึงจะรู้ว่ามีอะไร','ดาบกาแล็กซีเป็นตำนานของหมู่บ้านนี้'],
+ say:['เอาแร่มาให้ฉันอัปเกรดเครื่องมือได้เลย','ก้อนหินลึกลับต้องทุบถึงจะรู้ว่ามีอะไร','ดาบกาแล็กซีเป็นตำนานของหมู่บ้านนี้',
+  'เตาหลอมของฉันร้อนได้ทั้งวันทั้งคืนเลย','อาวุธในตำนานบางเล่มถูกลืมไปแล้วน่าเสียดาย'],
  sc:[[6,'mountain',4,6],[12,'mountain',4,5],[18,'saloon',11,6],[22,'mountain',4,6]]},
 {id:'mayor',n:'ผู้ใหญ่จรัส',c:'#c0392b',job:'ผู้ใหญ่บ้าน',bd:{s:3,d:20},
- like:['pie','wine','goldmask','ancientcoin','pumpkin','cauliflower'],
- say:['พิพิธภัณฑ์ต้องการของบริจาคนะ ไปดูสิ','เทศกาลปีนี้จะยิ่งใหญ่มาก','กระดานภารกิจมีงานใหม่ทุกวัน'],
+ like:['pie','mead','goldmask','ancientcoin','pumpkin','cauliflower'],
+ say:['พิพิธภัณฑ์ต้องการของบริจาคนะ ไปดูสิ','เทศกาลปีนี้จะยิ่งใหญ่มาก','กระดานภารกิจมีงานใหม่ทุกวัน',
+  'ปีนี้งบพัฒนาหมู่บ้านเพิ่มขึ้นนิดหน่อยนะ','ทุกคนในหมู่บ้านคือครอบครัวเดียวกัน'],
  sc:[[6,'town',10,5],[11,'museum',9,6],[16,'town',11,7],[20,'saloon',7,6]]}];
-/* ---------------- MOBS ---------------- */
+/* ---------------- HEART EVENTS ---------------- */
+const HEART_EVENTS={
+mira:{200:'มิร่า: เธอมาคุยกับฉันบ่อยจังเลยนะ... ฉันเริ่มชินกับมันแล้ว 🌷',
+ 400:'มิร่า: ฉันเก็บดอกไม้แห้งจากที่เธอให้ไว้ในหนังสือเล่มโปรดเลยนะ',
+ 600:'มิร่า: เวลาที่เธอมาเยี่ยมร้าน หัวใจฉันเต้นแรงขึ้นทุกที... แปลกดีเนอะ',
+ 800:'มิร่า: ฉันคิดว่า... ฉันอยากให้เธอเป็นคนพิเศษของฉันจริงๆ นะ 💕',
+ 1000:'มิร่า: ไม่ว่าจะเกิดอะไรขึ้น ฉันอยากอยู่เคียงข้างเธอไปตลอดเลย'},
+nin:{200:'นิล: เธอสนใจแร่เหมือนฉันเลยนะ หาคนคุยเรื่องนี้ยากมาก',
+ 400:'นิล: ฉันเจอผลึกแปลกๆ มา อยากโชว์ให้เธอดูเป็นคนแรกเลย',
+ 600:'นิล: อยู่กับเธอแล้วรู้สึกไม่ต้องระวังตัวเหมือนตอนอยู่คนเดียวในเหมือง',
+ 800:'นิล: ฉันเก็บหินก้อนแรกที่เธอให้ไว้อย่างดีเลยนะ มันมีความหมายมาก',
+ 1000:'นิล: ในบรรดาแร่ล้ำค่าทั้งหมดที่ฉันเจอ เธอคือสิ่งล้ำค่าที่สุด'},
+tin:{200:'ติน: เธอกล้าเหมือนนักผจญภัยเลยนะ ฉันชอบคนแบบนี้',
+ 400:'ติน: ฝึกดาบด้วยกันไหม? เดี๋ยวสอนท่าเด็ดให้',
+ 600:'ติน: มีเธอเป็นเพื่อนคู่ใจ ลงเหมืองกี่ชั้นก็ไม่กลัวแล้ว',
+ 800:'ติน: จริงๆ ฉันแอบหวังให้เธอรอฉันกลับจากเหมืองทุกครั้งเลยนะ',
+ 1000:'ติน: ผจญภัยที่ไหนก็ไม่สนุกเท่าผจญภัยไปกับเธอหรอก'},
+kan:{200:'กันต์: รสมือเธอเข้าท่าดีนะ วันหลังมาช่วยครัวกันไหม',
+ 400:'กันต์: ฉันคิดเมนูใหม่จากวัตถุดิบที่เธอเอามาให้ตลอดเลย',
+ 600:'กันต์: กินข้าวกับเธอแล้วอร่อยกว่าปกติแฮะ แปลกจัง',
+ 800:'กันต์: เธอทำให้ฉันอยากทำอาหารเก่งขึ้นทุกวันเลยนะ',
+ 1000:'กันต์: เธอคือวัตถุดิบชิ้นเอกที่ฉันไม่มีวันเบื่อจริงๆ'},
+boon:{200:'ลุงบุญ: หนุ่มสาวสมัยนี้ยังสนใจตกปลาอยู่ ดีใจจัง',
+ 400:'ลุงบุญ: เดี๋ยวลุงสอนจุดตกปลาลับให้นะ อย่าบอกใครล่ะ',
+ 600:'ลุงบุญ: มีเธอมาคุยด้วย ทะเลไม่เหงาเหมือนก่อนแล้ว',
+ 800:'ลุงบุญ: ลุงอยากยกเบ็ดคู่ใจให้เธอสักวันนะ',
+ 1000:'ลุงบุญ: เธอเป็นเหมือนลูกหลานของลุงไปแล้วนะ ขอบใจที่แวะมาคุยเสมอ'},
+kaew:{200:'ป้าแก้ว: ไร่ของเธอดูแลดีขึ้นทุกวันเลยนะ ป้าเห็นแล้วชื่นใจ',
+ 400:'ป้าแก้ว: เดี๋ยวป้าสอนสูตรปุ๋ยเด็ดให้ อย่าลืมมาฟังนะ',
+ 600:'ป้าแก้ว: เห็นเธอขยันแบบนี้ ป้านึกถึงตอนป้ายังสาวๆ เลย',
+ 800:'ป้าแก้ว: เธอเหมือนลูกสาวคนเล็กของป้าไปแล้วนะ',
+ 1000:'ป้าแก้ว: ป้าภูมิใจในตัวเธอมากนะลูก สู้ๆ ต่อไปเรื่อยๆ'},
+som:{200:'ช่างสม: มือเธอไม่เลวนะ สนใจงานเหล็กบ้างไหม',
+ 400:'ช่างสม: เอาแร่ดีๆ มาอีก เดี๋ยวจะตีของพิเศษให้',
+ 600:'ช่างสม: ปกติฉันไม่ค่อยไว้ใจใครหรอกนะ แต่เธอนี่ต่างออกไป',
+ 800:'ช่างสม: ดาบเล่มไหนที่ฉันตีให้เธอ ฉันตั้งใจทำที่สุดทุกเล่มเลยนะ',
+ 1000:'ช่างสม: เพื่อนแท้แบบเธอนี่แหละ หายากยิ่งกว่าแร่หายากซะอีก'},
+mayor:{200:'ผู้ใหญ่จรัส: หมู่บ้านเรามีคนขยันแบบเธอ ถือเป็นโชคดีนะ',
+ 400:'ผู้ใหญ่จรัส: พิพิธภัณฑ์ของเราดูดีขึ้นเพราะของที่เธอบริจาคเลยนะ',
+ 600:'ผู้ใหญ่จรัส: ชาวบ้านพูดถึงเธอในทางที่ดีเสมอเลย ภูมิใจแทนนะ',
+ 800:'ผู้ใหญ่จรัส: ถ้าหมู่บ้านนี้มีรางวัล "พลเมืองดีเด่น" เธอคงได้แน่ๆ',
+ 1000:'ผู้ใหญ่จรัส: เพราะเธอ หมู่บ้านนี้เลยน่าอยู่ขึ้นมาก ขอบใจจริงๆ นะ'}};
+const JUNK_GIFTS=['trash','boot','slimeball','batwing','bone'];
+const MIN_DATE_DAYS=7;
+const DATE_EVENT={
+mira:'มิร่า: วันนี้อยากชวนเธอไปเดินเล่นชายหาดตอนพระอาทิตย์ตกด้วยกันจัง เราคุยกันยาวเลยจนลืมเวลา 🌅💐',
+nin:'นิล: คืนนี้ท้องฟ้าใสมาก ฉันชวนเธอไปนั่งดูดาวที่ปากเหมืองด้วยกัน เงียบสงบดีจัง ⭐',
+tin:'ติน: วันนี้ฝึกดาบด้วยกันแล้วไปกินข้าวเย็นต่อ เธอเก่งขึ้นเรื่อยๆ เลยนะ ⚔️',
+kan:'กันต์: ฉันทำมื้อพิเศษไว้รอเธอที่ร้านเลยนะ นั่งกินด้วยกันจนดึกเลย 🍷'};
+function checkDateEvent(np,d,a){if(G.dating!==np.id||G.dateEventDone||!DATE_EVENT[np.id])return false;
+ if(G.datingDays<3)return false;
+ G.dateEventDone=true;G.money+=250;np.fr=Math.min(1000,np.fr+40);
+ toast('💑 '+DATE_EVENT[np.id]+' (+250G)');
+ burst(a.tx,a.ty,'#ff7aa0',24,{shape:'heart',life:1.3});SFX.wed();return true;}
+const HEART_RW={200:100,400:150,600:200,800:300,1000:500};
+function checkHeart(np,d,a){const ev=HEART_EVENTS[np.id];if(!ev)return false;
+ G.heartSeen=G.heartSeen||{};const seen=G.heartSeen[np.id]=G.heartSeen[np.id]||[];
+ const th=[200,400,600,800,1000].find(t=>np.fr>=t&&!seen.includes(t));
+ if(!th)return false;
+ seen.push(th);G.money+=HEART_RW[th];
+ toast('💞 '+ev[th]+' (+'+HEART_RW[th]+'G)');
+ burst(a.tx,a.ty,'#ff9ab0',18,{shape:'heart'});SFX.wed();return true;}
+
 const MOBS={
 slime:{n:'สไลม์',hp:16,dmg:6,spd:.85,c:'#5fc45f',xp:8,loot:['slimeball']},
 bat:{n:'ค้างคาว',hp:12,dmg:9,spd:1.6,c:'#8a6ad0',xp:11,loot:['batwing']},
@@ -459,7 +533,7 @@ function genTown(){const m=blankMap('path');
  m[7][17].o={k:'board'};m[6][9].o={k:'fountain'};m[3][8].o={k:'statue'};
  m[6][0].o={k:'exit',to:'farm',px:18,py:3,dir:'l'};
  m[6][19].o={k:'exit',to:'mountain',px:1,py:6,dir:'r'};
- m[11][10].o={k:'exit',to:'beach',px:10,py:1,dir:'d'};
+ m[11][10].o={k:'exit',to:'beach',px:10,py:2,dir:'d'};
  return m;}
 function genForest(){const m=blankMap();
  for(let y=6;y<=11;y++)for(let x=10;x<=18;x++)if(hash(x,y)>.13)m[y][x].t='water';
@@ -562,10 +636,10 @@ function newGame(){
   skills:{farming:{xp:0,lv:0},mining:{xp:0,lv:0},foraging:{xp:0,lv:0},fishing:{xp:0,lv:0},combat:{xp:0,lv:0}},
   ship:[],animals:[],npcs:[],quests:[],depth:0,maxDepth:0,mobs:[],mineRocks:0,mineBroken:0,
   greenhouse:false,stable:false,horse:null,pet:null,riding:false,coopLv:1,barnLv:1,houseLv:1,
-  dating:null,spouse:null,sp:null,marriedDays:0,child:null,
+  dating:null,spouse:null,sp:null,marriedDays:0,datingDays:0,dateEventDone:false,child:null,
   donated:{},caught:{},ach:{},buff:{spd:0,luck:0,def:0},festDone:{},
   stats:{harvest:0,fish:0,mine:0,earn:0,days:0,art:0,kills:0,boss:0,chop:0},
-  petToday:{},giftToday:{},maps:{},px:8,py:6,passed:false,
+  petToday:{},giftToday:{},heartSeen:{},maps:{},px:8,py:6,passed:false,
   perks:{},perkQueue:[],merchant:null};
  G.maps.farm=genFarm();G.maps.town=genTown();G.maps.forest=genForest();
  G.maps.beach=genBeach();G.maps.mountain=genMountain();G.maps.house=genHouse();
@@ -808,7 +882,7 @@ function doAct(a){const t=T(a.tx,a.ty);
    G.luck+=.03;SFX.pop();}else{float(a.tx,a.ty,'♪','#fff');SFX.pop();}break;}
  case 'child':toast('👶 '+G.child.name+': '+pick(['พ่อแม่จ๋า!','หิวแล้ว~','ไปเล่นกันเถอะ!','หนูรักพ่อแม่นะ 💕']));SFX.pop();break;
  case 'talk':doTalk(a);break;
- case 'enter':{const o=t.o;
+ case 'enter':{const o=t.o;warpLock=.6;
   if(o.k==='ladder'){goDepth(G.depth+1);break;}
   if(o.k==='exitmine'){G.depth=0;G.loc='mountain';P.x=15;P.y=5;P.path=[];G.mobs=[];break;}
   if(o.to==='mine'){goDepth(1);G.loc='mine';break;}
@@ -821,7 +895,7 @@ function doAct(a){const t=T(a.tx,a.ty);
   if(o.to==='clinicui'){UI.clinic();break;}
   G.loc=o.to;P.x=o.px;P.y=o.py;P.path=[];G.riding=false;SFX.pop();checkFest();break;}
  case 'bin':UI.bin();break;
- case 'board':UI.quests();break;
+ case 'board':UI.journal('quest');break;
  case 'bed':UI.sleepConfirm();break;
  case 'stove':UI.cook();break;
  case 'tv':toast('📺 พรุ่งนี้: '+WNAME[G.tomorrow]+' · ดวงวันนี้: '+luckTxt());break;
@@ -860,22 +934,26 @@ function doTalk(a){const np=G.npcs.find(n=>n.id===a.id)||G.sp,d=NPCDEF.find(x=>x
   if(!d.mar){toast('🙂 '+d.n+': ขอบใจนะ แต่ฉันขอเป็นเพื่อนที่ดีดีกว่า');return;}
   if(G.dating){toast('💔 คุณมีคนคุยอยู่แล้ว');SFX.err();return;}
   if(np.fr<800){toast('💐 ยังไม่พร้อม (ต้อง 8 หัวใจ — ตอนนี้ '+Math.floor(np.fr/100)+')');SFX.err();return;}
-  removeItem('bouquet',1);G.dating=np.id;np.fr=Math.min(1000,np.fr+60);
+  removeItem('bouquet',1);G.dating=np.id;G.datingDays=0;G.dateEventDone=false;np.fr=Math.min(1000,np.fr+60);
   burst(a.tx,a.ty,'#ff7aa0',20,{shape:'heart',life:1.2});SFX.wed();
   toast('💐 '+d.n+' ตอบตกลงเป็นแฟนคุณแล้ว!');return;}
  if(it&&it.id==='ring'){
   if(G.spouse){SFX.err();return;}
   if(G.dating!==np.id){toast('💍 ต้องเป็นแฟนกันก่อน');SFX.err();return;}
   if(np.fr<1000){toast('💍 ต้อง 10 หัวใจเต็มก่อน');SFX.err();return;}
+  if(G.datingDays<MIN_DATE_DAYS){toast('💍 ยังคบกันไม่นานพอ (อีก '+(MIN_DATE_DAYS-G.datingDays)+' วัน)');SFX.err();return;}
   removeItem('ring',1);marry(np,d,a);return;}
  if(it&&!G.giftToday[np.id]&&it.type!=='tool'){
   G.giftToday[np.id]=1;const liked=d.like.includes(it.id)||it.type==='art';
-  const bd=isBirthday(np.id);let amt=(liked?60:20)*(bd?3:1);
-  np.fr=Math.min(1000,np.fr+amt);removeItem(it.id,1);
-  toast((bd?'🎂 ':liked?'💗 ':'🙂 ')+d.n+': '+(bd?'วันเกิดฉันพอดี! ขอบคุณมากเลย!':liked?'ว้าว! ฉันชอบ'+it.n+'มาก!':'ขอบใจนะ')+' (+'+amt+')');
-  burst(a.tx,a.ty,'#ff9ab0',12);SFX.coin();return;}
+  const hated=JUNK_GIFTS.includes(it.id)&&!liked;
+  const bd=isBirthday(np.id);let amt=hated?-25:(liked?60:20)*(bd?3:1);
+  np.fr=cl(np.fr+amt,0,1000);removeItem(it.id,1);
+  toast((bd?'🎂 ':liked?'💗 ':hated?'😒 ':'🙂 ')+d.n+': '+(bd?'วันเกิดฉันพอดี! ขอบคุณมากเลย!':liked?'ว้าว! ฉันชอบ'+it.n+'มาก!':hated?'เอิ่ม... ของแบบนี้ไม่เอาน่า':'ขอบใจนะ')+' ('+(amt>=0?'+':'')+amt+')');
+  burst(a.tx,a.ty,hated?'#8a8a8a':'#ff9ab0',12);hated?SFX.err():SFX.coin();return;}
  if(isBirthday(np.id)){toast('🎂 '+d.n+': วันนี้วันเกิดฉันเอง! (ให้ของขวัญได้ 3 เท่า)');SFX.pop();return;}
- toast('💬 '+d.n+': '+pick(G.spouse===np.id&&d.mr?d.mr:d.say));SFX.pop();}
+ if(checkHeart(np,d,a))return;
+ if(checkDateEvent(np,d,a))return;
+ toast('💬 '+d.n+': '+pick(G.spouse===np.id&&d.mr?d.mr:G.dating===np.id&&d.dt?d.dt:d.say));SFX.pop();}
 function marry(np,d,a){G.spouse=np.id;G.dating=null;np.fr=1000;G.marriedDays=0;
  G.maxEnergy+=30;G.energy=G.maxEnergy;
  G.sp={id:np.id,x:7,y:5,tx:7,ty:5,t:0,anim:0,fr:1000,loc:'house'};
@@ -945,6 +1023,7 @@ function nextDay(){
     const r=o.k==='sprinkler'?1:o.k==='qsprinkler'?2:3;
     for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++){if(o.k==='sprinkler'&&Math.abs(i)+Math.abs(j)>1)continue;
      const tt=m[y+j]&&m[y+j][x+i];if(tt&&tt.t==='tilled')tt.wet=true;}}}}
+  if(G.dating)G.datingDays=(G.datingDays||0)+1;
  if(G.spouse){G.marriedDays++;const d=NPCDEF.find(x=>x.id===G.spouse);
   if(chance(.45)){let c=0;['farm','greenhouse'].forEach(L=>{const m=G.maps[L];if(!m)return;
     for(let y=0;y<GH;y++)for(let x=0;x<GW;x++)if(m[y][x].t==='tilled'&&!m[y][x].wet){m[y][x].wet=true;c++;}});
@@ -1054,7 +1133,7 @@ function npcSched(){const hr=Math.floor(G.time/60)%24;
   let cur=d.sc[0];d.sc.forEach(s=>{if(hr>=s[0])cur=s;});
   if(n.loc!==cur[1]){n.loc=cur[1];n.x=cur[2];n.y=cur[3];}
   n.ax=cur[2];n.ay=cur[3];});}
-function update(dt){perf+=dt;if(confetti>0)confetti-=dt;if(shake>0)shake-=dt;
+function update(dt){perf+=dt;if(confetti>0)confetti-=dt;if(shake>0)shake-=dt;if(warpLock>0)warpLock-=dt;
  const paused=modalOpen||document.getElementById('dayend').style.display==='flex';
  if(!modalOpen&&!fishing&&G.perkQueue&&G.perkQueue.length)openPerkChoice();
  if(fishing)updFishing(dt);
@@ -1080,7 +1159,7 @@ function update(dt){perf+=dt;if(confetti>0)confetti-=dt;if(shake>0)shake-=dt;
     if(walk(Math.round(P.x),Math.round(ny)))P.y=ny;
     P.dir=Math.abs(mx)>Math.abs(my)?(mx>0?'right':'left'):(my>0?'down':'up');P.anim+=dt*9;P.pend=null;}
    const ug=T(Math.round(P.x),Math.round(P.y));
-   if(ug&&ug.o&&['exit','exitmine','ladder'].includes(ug.o.k))startAct({type:'enter',tx:Math.round(P.x),ty:Math.round(P.y)});}
+   if(ug&&ug.o&&warpLock<=0&&['exit','exitmine','ladder'].includes(ug.o.k))startAct({type:'enter',tx:Math.round(P.x),ty:Math.round(P.y)});}
   G.animals.forEach(a=>{if(a.loc!=='farm')return;a.t=(a.t||0)-dt;
    if(a.t<=0){a.t=rnd(2,5);const nx=cl(Math.round(a.x)+ri(-1,1),1,18),ny=cl(Math.round(a.y)+ri(-1,1),1,10);
     if(walk(nx,ny,'farm')){a.tx=nx;a.ty=ny;}}
@@ -1597,7 +1676,7 @@ UI.shop=function(tab){tab=tab||'seed';const s=SEASONS[G.season];
   h+=row('💍','แหวนหอยมุก','ถือแล้วคลิกแฟนของคุณ',5000,'buy(\'ring\',5000,1)','ซื้อ');
   h+='<h3>สถานะหัวใจ</h3>';
   G.npcs.forEach(n=>{const d=NPCDEF.find(x=>x.id===n.id);
-   h+='<div class="row"><span class="nm"><b>'+d.n+'</b> <span class="tag">'+d.job+' · ชอบ: '+d.like.slice(0,4).map(i=>ITEMS[i].e).join('')+
+   h+='<div class="row"><span class="nm"><b>'+d.n+'</b> <span class="tag">'+d.job+' · ชอบ: '+d.like.slice(0,4).map(i=>ITEMS[i]?ITEMS[i].e:'❓').join('')+
    ' · เกิด '+SE_TH[SEASONS[d.bd.s]]+' '+d.bd.d+'</span></span><b style="color:#e0567a">'+
    (G.spouse===n.id?'💍':G.dating===n.id?'💐':'')+'❤×'+Math.floor(n.fr/100)+'</b></div>';});}
  else{h+='<div class="tag">ขายทันทีได้ 80% (ตู้ส่งของได้เต็มราคา)</div>';
@@ -1763,7 +1842,7 @@ UI.skills=function(){const nm={farming:['🌾 เกษตรกรรม','ล�
   h+='<div class="row done"><span class="nm">💍 <b>แต่งงานกับ '+d.n+'</b> <span class="tag">แต่งมาแล้ว '+G.marriedDays+' วัน</span></span></div>';}
  if(G.child)h+='<div class="row done"><span class="nm">👶 <b>'+G.child.name+'</b> <span class="tag">อายุ '+G.child.age+' วัน</span></span></div>';
  G.npcs.forEach(n=>{const d=NPCDEF.find(x=>x.id===n.id);
-  h+='<div class="row"><span class="nm"><b>'+d.n+'</b> <span class="tag">'+d.job+' · ชอบ '+d.like.slice(0,4).map(i=>ITEMS[i].e).join('')+'</span></span><b style="color:#e0567a">❤×'+Math.floor(n.fr/100)+'</b></div>';});
+  h+='<div class="row"><span class="nm"><b>'+d.n+'</b> <span class="tag">'+d.job+' · ชอบ '+d.like.slice(0,4).map(i=>ITEMS[i]?ITEMS[i].e:'❓').join('')+'</span></span><b style="color:#e0567a">❤×'+Math.floor(n.fr/100)+'</b></div>';});
  openPanel(h);};
 UI.journal=function(tab){tab=tab||'quest';
  let h='<button class="close" onclick="closePanel()">ปิด</button><h2>📔 สมุดบันทึก</h2>';
@@ -1903,7 +1982,8 @@ function saveGame(manual){try{G.px=P.x;G.py=P.y;localStorage.setItem(SAVEKEY,JSO
  if(manual){toast('💾 บันทึกเกมแล้ว');SFX.pop();}}catch(e){toast('❌ บันทึกไม่สำเร็จ');}}
 function loadGame(){try{const d=localStorage.getItem(SAVEKEY);if(!d)return false;
  G=JSON.parse(d);P={x:G.px||8,y:G.py||6,dir:'down',path:[],act:null,pend:null,anim:0,inv:0};
- if(!G.buff)G.buff={spd:0,luck:0,def:0};if(!G.mobs)G.mobs=[];
+ if(!G.buff)G.buff={spd:0,luck:0,def:0};if(!G.mobs)G.mobs=[];if(!G.heartSeen)G.heartSeen={};
+ if(G.datingDays===undefined)G.datingDays=0;if(G.dateEventDone===undefined)G.dateEventDone=false;
  if(G.loc==='mine'&&!G.maps.mine){G.maps.mine=genMine(G.depth||1);}
  if(G.spouse&&!G.sp)G.sp={id:G.spouse,x:8,y:5,tx:8,ty:5,t:0,anim:0,fr:1000,loc:'house'};
  if(!G.perks)G.perks={};if(!G.perkQueue)G.perkQueue=[];if(G.merchant===undefined)G.merchant=null;
